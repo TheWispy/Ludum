@@ -1,10 +1,11 @@
 ﻿using System;
-using Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Diagnostics;
+using System.Collections.Generic;
 
-namespace Shooter
+namespace Ludum
 {
     class Player
     {
@@ -13,6 +14,9 @@ namespace Shooter
         public int Health;
         public float MOVE_SPEED = 0.4f;
         public Animation PlayerAnimation;
+        public List<Animation> MoveSet;
+        KeyboardState currentKeys;
+        KeyboardState previousKeys;
 
         public int Width
         {
@@ -24,9 +28,10 @@ namespace Shooter
             get { return PlayerAnimation.FrameHeight; }
         }
 
-        public void Initialize(Animation animation, Vector2 position)
+        public void Initialize(List<Animation> moveSet, Vector2 position)
         {
-            PlayerAnimation = animation;
+            MoveSet = moveSet;
+            PlayerAnimation = MoveSet[0];
             Position = position;
             Active = true;
             Health = 100;
@@ -35,20 +40,26 @@ namespace Shooter
         public void Update(GameTime gameTime)
         
         {
+            currentKeys = Keyboard.GetState();
+            if (!Active) return; //TODO Game over
+
             PlayerAnimation.Position = Position;
             PlayerAnimation.Update(gameTime);
-            if (Keyboard.GetState().IsKeyDown(Keys.Left) || Keyboard.GetState().IsKeyDown(Keys.A))
+            if (currentKeys.IsKeyDown(Keys.Left) || currentKeys.IsKeyDown(Keys.A))
             {
                 Position.X -= MOVE_SPEED;
+                PlayerAnimation.Pause = false;
             }
-            if (Keyboard.GetState().IsKeyDown(Keys.Right) || Keyboard.GetState().IsKeyDown(Keys.D))
+            if (currentKeys.IsKeyDown(Keys.Right) || currentKeys.IsKeyDown(Keys.D))
             {
                 Position.X += MOVE_SPEED;
+                PlayerAnimation.Pause = false;
             }
-            if (Keyboard.GetState().IsKeyDown(Keys.Space))
+            if (currentKeys.IsKeyDown(Keys.Space) && previousKeys.IsKeyUp(Keys.Space))
             {
                 Shoot();
             }
+            previousKeys = currentKeys;
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -61,7 +72,7 @@ namespace Shooter
         }
         public void Shoot()
         {
-
+            Debug.WriteLine("BANG"+System.DateTime.Now.Millisecond);
         }
     }
 }

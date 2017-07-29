@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Effects
+namespace Ludum
 {
     class Animation
     {
@@ -20,16 +20,18 @@ namespace Effects
         public int FrameHeight;
         public bool Active;
         public bool Looping;
+        public bool Pause;
         public Vector2 Position;
         public void Initialize(Texture2D texture, Vector2 position, int frameWidth, int frameHeight, int frameCount,
             int frametime, Color color, float scale, bool looping)
         {
             this.color = color;
-            this.FrameWidth = frameWidth;
-            this.FrameHeight = frameHeight;
+            FrameWidth = frameWidth;
+            FrameHeight = frameHeight;
             this.frameCount = frameCount;
-            this.frameTime = frametime;
+            frameTime = frametime;
             this.scale = scale;
+            Pause = false;
 
             Looping = looping;
             Position = position;
@@ -46,9 +48,13 @@ namespace Effects
 
             elapsedTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
             if (elapsedTime > frameTime)
-            {
+            { 
                 // Move to the next frame
                 currentFrame++;
+                if (Pause)
+                {
+                    currentFrame = 0;
+                }
                 // If the currentFrame is equal to frameCount reset currentFrame to zero
                 if (currentFrame == frameCount)
                 {

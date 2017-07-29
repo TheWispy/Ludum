@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Shooter;
-using Effects;
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
@@ -28,6 +26,11 @@ namespace Ludum
         TimeSpan enemySpawnTime;
         TimeSpan previousSpawnTime;
 
+        //Projectiles
+        Texture2D projectileTexture;
+        TimeSpan projectileSpawnTime;
+        TimeSpan previousLaserSpawnTime;
+        List<Projectile> projectiles;
         Random random;
 
         public Game1()
@@ -54,6 +57,12 @@ namespace Ludum
             previousSpawnTime = TimeSpan.Zero;
             enemySpawnTime = TimeSpan.FromSeconds(1.0f);
 
+            projectiles = new List<Projectile>();
+            const float SECONDS_IN_MINUTE = 60f;
+            const float RATE_OF_FIRE = 200f;
+            projectileSpawnTime = TimeSpan.FromSeconds(SECONDS_IN_MINUTE / RATE_OF_FIRE);
+            previousLaserSpawnTime = TimeSpan.Zero;
+
             random = new Random();
 
             base.Initialize();
@@ -67,12 +76,15 @@ namespace Ludum
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             Vector2 playerPosition = new Vector2(20, VIRTUAL_HEIGHT - 20);
+            List<Animation> playerMoveSet = new List<Animation>();
             Texture2D idleTexture = Content.Load<Texture2D>("player_idle");
             Animation idle = new Animation();
             idle.Initialize(idleTexture, playerPosition, 32, 32, 4, 150, Color.White, 1f, true);
-            player.Initialize(idle, playerPosition);
+            playerMoveSet.Add(idle);
+            player.Initialize(playerMoveSet, playerPosition);
 
             enemyTexture = Content.Load<Texture2D>("enemy");
+            projectileTexture = Content.Load<Texture2D>("bullet");
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -97,18 +109,44 @@ namespace Ludum
 
             player.Update(gameTime);
             UpdateEnemies(gameTime);
+            UpdateCollision();
             base.Update(gameTime);
         }
 
         private void AddEnemy()
         {
-            Animation enemyAnimation = new Effects.Animation();
+            Animation enemyAnimation = new Animation();
             Vector2 position = new Vector2(VIRTUAL_WIDTH - 20, VIRTUAL_HEIGHT - 20);
             enemyAnimation.Initialize(enemyTexture, position, 32, 32, 6, 100, Color.White, 1f, true);
 
             Enemy enemy = new Enemy();
             enemy.Initialize(enemyAnimation, position);
             enemies.Add(enemy);
+        }
+
+        private void UpdateCollision()
+        {
+            // Use the Rectangle’s built-in intersect function to determine if two objects are overlapping
+            Rectangle rectangle1;
+            Rectangle rectangle2;
+            // Only create the rectangle once for the player
+            rectangle1 = new Rectangle((int)player.Position.X, (int)player.Position.Y, player.Width, player.Height);
+            // Do the collision between the player and the enemies
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                rectangle2 = new Rectangle((int)enemies[i].Position.X, (int)enemies[i].Position.Y, enemies[i].Width, enemies[i].Height);
+
+                if (rectangle1.Intersects(rectangle2))
+                {
+                    player.Health -= enemies[i].Damage;
+                    Debug.WriteLine(player.Health);
+                    enemies[i].Health = 0;
+                    if (player.Health <= 0)
+                    {
+                        player.Active = false;
+                    }
+                }
+            }
         }
 
         private void UpdateEnemies(GameTime gameTime)
@@ -142,7 +180,7 @@ namespace Ludum
             for (int i = 0; i < enemies.Count; i++)
             {
                 enemies[i].Draw(_spriteBatch);
-                Debug.WriteLine(enemies[i].Position+ " "+enemies[i].Width+" "+enemies[i].Height );
+                //Debug.WriteLine(enemies[i].Position+ " "+enemies[i].Width+" "+enemies[i].Height );
             }
 
             _spriteBatch.End();

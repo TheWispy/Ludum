@@ -1,5 +1,4 @@
 ﻿using System;
-using Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -33,7 +32,7 @@ namespace Ludum
             Position = position;
             Active = true;
             Health = 10;
-            Damage = 10;
+            Damage = 20;
             enemyMoveSpeed = 0.4f;
         }
 
