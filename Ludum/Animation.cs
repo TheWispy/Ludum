@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Ludum
+namespace Effects
 {
     class Animation
     {
@@ -45,10 +45,36 @@ namespace Ludum
             if (!Active) return;
 
             elapsedTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (elapsedTime > frameTime)
+            {
+                // Move to the next frame
+                currentFrame++;
+                // If the currentFrame is equal to frameCount reset currentFrame to zero
+                if (currentFrame == frameCount)
+                {
+                    currentFrame = 0;
+                    // If we are not looping deactivate the animation
+                    if (Looping == false)
+                        Active = false;
+                }
+                // Reset the elapsed time to zero
+                elapsedTime = 0;
+            }
+            // Grab the correct frame in the image strip by multiplying the currentFrame index by the frame width
+            sourceRect = new Rectangle(currentFrame * FrameWidth, 0, FrameWidth, FrameHeight);
+            // Grab the correct frame in the image strip by multiplying the currentFrame index by the frame width
+            destinationRect = new Rectangle((int)Position.X - (int)(FrameWidth * scale) / 2,
+            (int)Position.Y - (int)(FrameHeight * scale) / 2,
+            (int)(FrameWidth * scale),
+            (int)(FrameHeight * scale));
         }
-        public void Draw()
-        {
 
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            if (Active)
+            {
+                spriteBatch.Draw(spriteStrip, destinationRect, sourceRect, color);
+            }
         }
     }
 }

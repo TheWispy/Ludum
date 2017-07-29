@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Shooter;
+using Effects;
 
 namespace Ludum
 {
@@ -48,8 +49,11 @@ namespace Ludum
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            Vector2 playerPosition = new Vector2(0, 0);
-            player.Initialize(Content.Load<Texture2D>("player"), playerPosition);
+            Vector2 playerPosition = new Vector2(20, VIRTUAL_HEIGHT - 20);
+            Texture2D idleTexture = Content.Load<Texture2D>("player_idle");
+            Animation idle = new Animation();
+            idle.Initialize(idleTexture, Vector2.Zero, 32, 32, 4, 150, Color.White, 1f, true);
+            player.Initialize(idle, playerPosition);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
 
@@ -72,7 +76,7 @@ namespace Ludum
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            player.Update();
+            player.Update(gameTime);
 
             base.Update(gameTime);
         }
