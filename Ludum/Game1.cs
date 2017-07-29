@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Shooter;
 
 namespace Ludum
 {
@@ -10,7 +11,8 @@ namespace Ludum
     public class Game1 : Game
     {
         GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        SpriteBatch _spriteBatch;
+        Player player;
 
         public Game1()
         {
@@ -75,7 +77,8 @@ namespace Ludum
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            _spriteBatch.Begin();
+            player.Draw();
 
             base.Draw(gameTime);
         }
