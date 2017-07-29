@@ -40,9 +40,11 @@ namespace Ludum
 
             Active = true;
         }
-        public void Update()
+        public void Update(GameTime gameTime)
         {
+            if (!Active) return;
 
+            elapsedTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
         }
         public void Draw()
         {
