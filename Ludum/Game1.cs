@@ -17,14 +17,15 @@ namespace Ludum
         RenderTarget2D renderTarget;
         const int VIRTUAL_WIDTH = 256;
         const int VIRTUAL_HEIGHT = 144;
-
+        public bool isPaused = false;
+        float time;
         Player player;
 
         //Enemies
         Texture2D enemyTexture;
         List<Enemy> enemies;
-        TimeSpan enemySpawnTime;
-        TimeSpan previousSpawnTime;
+        float enemySpawnTime;
+        float previousSpawnTime;
 
         //Projectiles
         Texture2D projectileTexture;
@@ -32,6 +33,9 @@ namespace Ludum
         TimeSpan previousLaserSpawnTime;
         List<Projectile> projectiles;
         Random random;
+
+        KeyboardState currentKeys;
+        KeyboardState previousKeys;
 
         public Game1()
         {
@@ -54,8 +58,8 @@ namespace Ludum
             player = new Player();
 
             enemies = new List<Enemy>();
-            previousSpawnTime = TimeSpan.Zero;
-            enemySpawnTime = TimeSpan.FromSeconds(1.0f);
+            previousSpawnTime = 0f;
+            enemySpawnTime = 2f;
 
             projectiles = new List<Projectile>();
             const float SECONDS_IN_MINUTE = 60f;
@@ -104,12 +108,27 @@ namespace Ludum
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
-            player.Update(gameTime);
-            UpdateEnemies(gameTime);
-            UpdateCollision();
+            currentKeys = Keyboard.GetState();
+            if (currentKeys.IsKeyDown(Keys.Escape)) Exit();
+            if (!isPaused)
+            {
+                time += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (currentKeys.IsKeyDown(Keys.P) && previousKeys.IsKeyUp(Keys.P))
+                {
+                    isPaused = true;
+                }
+                player.Update(gameTime);
+                UpdateEnemies(gameTime);
+                UpdateCollision();
+            }
+            else
+            {
+                if (currentKeys.IsKeyDown(Keys.P) && previousKeys.IsKeyUp(Keys.P))
+                {
+                    isPaused = false;
+                }
+            }
+            previousKeys = currentKeys;
             base.Update(gameTime);
         }
 
@@ -151,17 +170,20 @@ namespace Ludum
 
         private void UpdateEnemies(GameTime gameTime)
         {
-            if (gameTime.TotalGameTime - previousSpawnTime > enemySpawnTime)
+            if (time - previousSpawnTime > enemySpawnTime)
             {
-                previousSpawnTime = gameTime.TotalGameTime;
+                previousSpawnTime = time;
                 AddEnemy();
             }
-            for (int i = 0; i < enemies.Count; i++)
+            if (!isPaused)
             {
-                enemies[i].Update(gameTime);
-                if (!enemies[i].Active)
+                for (int i = 0; i < enemies.Count; i++)
                 {
-                    enemies.RemoveAt(i);
+                    enemies[i].Update(gameTime);
+                    if (!enemies[i].Active)
+                    {
+                        enemies.RemoveAt(i);
+                    }
                 }
             }
         }
