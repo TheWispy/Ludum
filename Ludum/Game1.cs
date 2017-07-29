@@ -126,12 +126,9 @@ namespace Ludum
                 UpdateProjectiles(gameTime);
                 UpdateCollision();
             }
-            else
+            else if (currentKeys.IsKeyDown(Keys.P) && previousKeys.IsKeyUp(Keys.P))
             {
-                if (currentKeys.IsKeyDown(Keys.P) && previousKeys.IsKeyUp(Keys.P))
-                {
-                    isPaused = false;
-                }
+                isPaused = false;
             }
             previousKeys = currentKeys;
             base.Update(gameTime);
@@ -153,13 +150,27 @@ namespace Ludum
             // Use the Rectangle’s built-in intersect function to determine if two objects are overlapping
             Rectangle rectangle1;
             Rectangle rectangle2;
+            Rectangle rectangle3;
             // Only create the rectangle once for the player
             rectangle1 = new Rectangle((int)player.Position.X, (int)player.Position.Y, player.Width, player.Height);
             // Do the collision between the player and the enemies
             for (int i = 0; i < enemies.Count; i++)
             {
                 rectangle2 = new Rectangle((int)enemies[i].Position.X, (int)enemies[i].Position.Y, enemies[i].Width, enemies[i].Height);
-
+                for (int j = 0; j < projectiles.Count; j++)
+                {
+                    rectangle3 = new Rectangle((int)projectiles[j].Position.X, (int)projectiles[j].Position.Y,
+                        projectiles[j].Width, projectiles[j].Height);
+                    if (rectangle2.Intersects(rectangle3))
+                    {
+                        enemies[i].Health -= projectiles[j].Damage;
+                        projectiles[j].Active = false;
+                        if (enemies[i].Health <= 0)
+                        {
+                            enemies[i].Active = false;
+                        }
+                    }
+                }
                 if (rectangle1.Intersects(rectangle2))
                 {
                     player.Health -= enemies[i].Damage;
@@ -171,6 +182,7 @@ namespace Ludum
                     }
                 }
             }
+            
         }
 
         private void UpdateEnemies(GameTime gameTime)

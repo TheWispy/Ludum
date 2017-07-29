@@ -10,9 +10,9 @@ namespace Ludum
         float laserMoveSpeed = 2f;
         public Vector2 Direction;
         public Vector2 Position;
-        int Damage = 10;
+        public int Damage = 1;
         public bool Active;
-        int Range;
+        public int Range;
         public int Width
         {
             get { return LaserAnimation.FrameWidth; }
