@@ -3,6 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Shooter;
 using Effects;
+using System.Collections.Generic;
+using System;
+using System.Diagnostics;
 
 namespace Ludum
 {
@@ -14,12 +17,18 @@ namespace Ludum
         GraphicsDeviceManager graphics;
         SpriteBatch _spriteBatch;
         RenderTarget2D renderTarget;
-        const int VIRTUAL_WIDTH = 200;
-        const int VIRTUAL_HEIGHT = 100;
+        const int VIRTUAL_WIDTH = 256;
+        const int VIRTUAL_HEIGHT = 144;
 
         Player player;
-        KeyboardState currentKeyboardState;
-        KeyboardState previousKeyboardState;
+
+        //Enemies
+        Texture2D enemyTexture;
+        List<Enemy> enemies;
+        TimeSpan enemySpawnTime;
+        TimeSpan previousSpawnTime;
+
+        Random random;
 
         public Game1()
         {
@@ -38,7 +47,15 @@ namespace Ludum
             PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
             renderTarget = new RenderTarget2D(graphics.GraphicsDevice, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, false, SurfaceFormat.Color,
                 DepthFormat.None, pp.MultiSampleCount, RenderTargetUsage.DiscardContents);
+
             player = new Player();
+
+            enemies = new List<Enemy>();
+            previousSpawnTime = TimeSpan.Zero;
+            enemySpawnTime = TimeSpan.FromSeconds(1.0f);
+
+            random = new Random();
+
             base.Initialize();
         }
 
@@ -52,8 +69,11 @@ namespace Ludum
             Vector2 playerPosition = new Vector2(20, VIRTUAL_HEIGHT - 20);
             Texture2D idleTexture = Content.Load<Texture2D>("player_idle");
             Animation idle = new Animation();
-            idle.Initialize(idleTexture, Vector2.Zero, 32, 32, 4, 150, Color.White, 1f, true);
+            idle.Initialize(idleTexture, playerPosition, 32, 32, 4, 150, Color.White, 1f, true);
             player.Initialize(idle, playerPosition);
+
+            enemyTexture = Content.Load<Texture2D>("enemy");
+
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
 
@@ -63,7 +83,6 @@ namespace Ludum
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
         }
 
         /// <summary>
@@ -77,11 +96,38 @@ namespace Ludum
                 Exit();
 
             player.Update(gameTime);
-
+            UpdateEnemies(gameTime);
             base.Update(gameTime);
         }
 
-        /// <summary>
+        private void AddEnemy()
+        {
+            Animation enemyAnimation = new Effects.Animation();
+            Vector2 position = new Vector2(VIRTUAL_WIDTH - 20, VIRTUAL_HEIGHT - 20);
+            enemyAnimation.Initialize(enemyTexture, position, 32, 32, 6, 100, Color.White, 1f, true);
+
+            Enemy enemy = new Enemy();
+            enemy.Initialize(enemyAnimation, position);
+            enemies.Add(enemy);
+        }
+
+        private void UpdateEnemies(GameTime gameTime)
+        {
+            if (gameTime.TotalGameTime - previousSpawnTime > enemySpawnTime)
+            {
+                previousSpawnTime = gameTime.TotalGameTime;
+                AddEnemy();
+            }
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                enemies[i].Update(gameTime);
+                if (!enemies[i].Active)
+                {
+                    enemies.RemoveAt(i);
+                }
+            }
+        }
+
         /// This is called when the game should draw itself.
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
@@ -89,16 +135,34 @@ namespace Ludum
         {
             graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 
-            var scaleX = (float)graphics.GraphicsDevice.Viewport.Width / VIRTUAL_WIDTH;
-            var scaleY = (float)graphics.GraphicsDevice.Viewport.Height / VIRTUAL_HEIGHT;
-            var matrix = Matrix.CreateScale(scaleX, scaleY, 1.0f);
-
             //Draw your stuff
             graphics.GraphicsDevice.Clear(Color.LightGray);
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             player.Draw(_spriteBatch);
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                enemies[i].Draw(_spriteBatch);
+                Debug.WriteLine(enemies[i].Position+ " "+enemies[i].Width+" "+enemies[i].Height );
+            }
+
             _spriteBatch.End();
 
+            // clear to get black bars
+            Rectangle dst = barPlace();
+            graphics.GraphicsDevice.SetRenderTarget(null);
+            graphics.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1.0f, 0);
+
+            // draw a quad to get the draw buffer to the back buffer
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, samplerState: SamplerState.PointClamp);
+            _spriteBatch.Draw(renderTarget, dst, Color.White);
+            _spriteBatch.End();
+
+            base.Draw(gameTime);
+            base.Draw(gameTime);
+        }
+
+        private Rectangle barPlace()
+        {
             float outputAspect = Window.ClientBounds.Width / (float)Window.ClientBounds.Height;
             float preferredAspect = VIRTUAL_WIDTH / (float)VIRTUAL_HEIGHT;
 
@@ -118,19 +182,8 @@ namespace Ludum
                 int barWidth = (Window.ClientBounds.Width - presentWidth) / 2;
                 dst = new Rectangle(barWidth, 0, presentWidth, Window.ClientBounds.Height);
             }
-
-            graphics.GraphicsDevice.SetRenderTarget(null);
-
-            // clear to get black bars
-            graphics.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1.0f, 0);
-
-            // draw a quad to get the draw buffer to the back buffer
-            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, samplerState: SamplerState.PointClamp);
-            _spriteBatch.Draw(renderTarget, dst, Color.White);
-            _spriteBatch.End();
-
-            base.Draw(gameTime);
-            base.Draw(gameTime);
+            return dst;
         }
+
     }
 }

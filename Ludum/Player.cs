@@ -53,6 +53,7 @@ namespace Shooter
         public void Draw(SpriteBatch spriteBatch)
         {
             PlayerAnimation.Draw(spriteBatch);
+            
         }
         public void SetAnimation(Animation animation)
         {

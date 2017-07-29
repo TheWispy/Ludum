@@ -14,8 +14,8 @@ namespace Effects
         int frameCount; //Number of frames in strip
         int currentFrame;
         Color color;
-        Rectangle sourceRect = new Rectangle(); //Area of strip we want to display
-        Rectangle destinationRect = new Rectangle(); //Area we we want to display the image
+        Rectangle sourceRect; //Area of strip we want to display
+        Rectangle destinationRect; //Area we we want to display the image
         public int FrameWidth;
         public int FrameHeight;
         public bool Active;

@@ -14,7 +14,6 @@ namespace Ludum
         public float MOVE_SPEED = 0.4f;
         public Animation EnemyAnimation;
         public int Damage;
-        public int Value;
         
         public int Width
         {
@@ -28,19 +27,30 @@ namespace Ludum
 
         float enemyMoveSpeed;
 
-        public void Initialize()
+        public void Initialize(Animation animation, Vector2 position)
         {
-
+            EnemyAnimation = animation;
+            Position = position;
+            Active = true;
+            Health = 10;
+            Damage = 10;
+            enemyMoveSpeed = 0.4f;
         }
 
-        public void Update()
+        public void Update(GameTime gameTime)
         {
-
+            Position.X -= enemyMoveSpeed;
+            EnemyAnimation.Position = Position;
+            EnemyAnimation.Update(gameTime);
+            if (Position.X < -20 || Health <= 0)
+            {
+                Active = false;
+            }
         }
 
-        public void Draw()
+        public void Draw(SpriteBatch spriteBatch)
         {
-
+            EnemyAnimation.Draw(spriteBatch);
         }
     }
 }
