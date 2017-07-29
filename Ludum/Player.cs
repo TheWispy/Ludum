@@ -55,10 +55,7 @@ namespace Ludum
                 Position.X += MOVE_SPEED;
                 PlayerAnimation.Pause = false;
             }
-            if (currentKeys.IsKeyDown(Keys.Space) && previousKeys.IsKeyUp(Keys.Space))
-            {
-                Shoot();
-            }
+            
             previousKeys = currentKeys;
         }
         public void Draw(SpriteBatch spriteBatch)
@@ -69,10 +66,6 @@ namespace Ludum
         public void SetAnimation(Animation animation)
         {
             PlayerAnimation = animation;
-        }
-        public void Shoot()
-        {
-            Debug.WriteLine("BANG"+System.DateTime.Now.Millisecond);
         }
     }
 }

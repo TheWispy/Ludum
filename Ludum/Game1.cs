@@ -118,7 +118,12 @@ namespace Ludum
                     isPaused = true;
                 }
                 player.Update(gameTime);
+                if (currentKeys.IsKeyDown(Keys.Space) && previousKeys.IsKeyUp(Keys.Space))
+                {
+                    Shoot(player.Position, Vector2.UnitX);
+                }
                 UpdateEnemies(gameTime);
+                UpdateProjectiles(gameTime);
                 UpdateCollision();
             }
             else
@@ -188,6 +193,31 @@ namespace Ludum
             }
         }
 
+        public void Shoot(Vector2 position, Vector2 direction)
+        {
+            Debug.WriteLine("BANG" + System.DateTime.Now.Millisecond);
+            Projectile projectile = new Projectile();
+            Animation projectileAnim = new Animation();
+            projectileAnim.Initialize(projectileTexture, position, 16, 8, 6, 80, Color.White, 1f, true);
+            projectile.Initialize(projectileAnim, position, direction);
+            projectiles.Add(projectile);
+        }
+
+        private void UpdateProjectiles(GameTime gameTime)
+        {
+            if (!isPaused)
+            {
+                for (int i = 0; i < projectiles.Count; i++)
+                {
+                    projectiles[i].Update(gameTime);
+                    if (!projectiles[i].Active)
+                    {
+                        projectiles.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
         /// This is called when the game should draw itself.
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
@@ -204,7 +234,11 @@ namespace Ludum
                 enemies[i].Draw(_spriteBatch);
                 //Debug.WriteLine(enemies[i].Position+ " "+enemies[i].Width+" "+enemies[i].Height );
             }
-
+            for (int i = 0; i < projectiles.Count; i++)
+            {
+                projectiles[i].Draw(_spriteBatch);
+                Debug.WriteLine(projectiles[i].Position+ " "+projectiles[i].Width+" "+projectiles[i].Height );
+            }
             _spriteBatch.End();
 
             // clear to get black bars
@@ -217,7 +251,6 @@ namespace Ludum
             _spriteBatch.Draw(renderTarget, dst, Color.White);
             _spriteBatch.End();
 
-            base.Draw(gameTime);
             base.Draw(gameTime);
         }
 
