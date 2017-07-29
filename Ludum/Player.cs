@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Shooter
 {
@@ -10,6 +11,7 @@ namespace Shooter
         public Vector2 Position;
         public bool Active;
         public int Health;
+        const float MOVE_SPEED = 0.4f;
 
         public int Width
         {
@@ -30,8 +32,16 @@ namespace Shooter
         }
 
         public void Update()
+        
         {
-
+            if (Keyboard.GetState().IsKeyDown(Keys.Left) || Keyboard.GetState().IsKeyDown(Keys.A))
+            {
+                Position.X -= MOVE_SPEED;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Right) || Keyboard.GetState().IsKeyDown(Keys.D))
+            {
+                Position.X += MOVE_SPEED;
+            }
         }
         public void Draw(SpriteBatch spriteBatch)
         {

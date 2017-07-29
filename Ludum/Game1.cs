@@ -12,7 +12,13 @@ namespace Ludum
     {
         GraphicsDeviceManager graphics;
         SpriteBatch _spriteBatch;
+        RenderTarget2D renderTarget;
+        const int VIRTUAL_WIDTH = 200;
+        const int VIRTUAL_HEIGHT = 100;
+
         Player player;
+        KeyboardState currentKeyboardState;
+        KeyboardState previousKeyboardState;
 
         public Game1()
         {
@@ -28,8 +34,10 @@ namespace Ludum
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
+            PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
+            renderTarget = new RenderTarget2D(graphics.GraphicsDevice, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, false, SurfaceFormat.Color,
+                DepthFormat.None, pp.MultiSampleCount, RenderTargetUsage.DiscardContents);
+            player = new Player();
             base.Initialize();
         }
 
@@ -40,9 +48,9 @@ namespace Ludum
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
+            Vector2 playerPosition = new Vector2(0, 0);
+            player.Initialize(Content.Load<Texture2D>("player"), playerPosition);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
 
         /// <summary>
@@ -64,7 +72,7 @@ namespace Ludum
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            player.Update();
 
             base.Update(gameTime);
         }
@@ -75,11 +83,49 @@ namespace Ludum
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 
-            _spriteBatch.Begin();
-            player.Draw();
+            var scaleX = (float)graphics.GraphicsDevice.Viewport.Width / VIRTUAL_WIDTH;
+            var scaleY = (float)graphics.GraphicsDevice.Viewport.Height / VIRTUAL_HEIGHT;
+            var matrix = Matrix.CreateScale(scaleX, scaleY, 1.0f);
 
+            //Draw your stuff
+            graphics.GraphicsDevice.Clear(Color.LightGray);
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            player.Draw(_spriteBatch);
+            _spriteBatch.End();
+
+            float outputAspect = Window.ClientBounds.Width / (float)Window.ClientBounds.Height;
+            float preferredAspect = VIRTUAL_WIDTH / (float)VIRTUAL_HEIGHT;
+
+            Rectangle dst;
+
+            if (outputAspect <= preferredAspect)
+            {
+                // output is taller than it is wider, bars on top/bottom
+                int presentHeight = (int)((Window.ClientBounds.Width / preferredAspect) + 0.5f);
+                int barHeight = (Window.ClientBounds.Height - presentHeight) / 2;
+                dst = new Rectangle(0, barHeight, Window.ClientBounds.Width, presentHeight);
+            }
+            else
+            {
+                // output is wider than it is tall, bars left/right
+                int presentWidth = (int)((Window.ClientBounds.Height * preferredAspect) + 0.5f);
+                int barWidth = (Window.ClientBounds.Width - presentWidth) / 2;
+                dst = new Rectangle(barWidth, 0, presentWidth, Window.ClientBounds.Height);
+            }
+
+            graphics.GraphicsDevice.SetRenderTarget(null);
+
+            // clear to get black bars
+            graphics.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1.0f, 0);
+
+            // draw a quad to get the draw buffer to the back buffer
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, samplerState: SamplerState.PointClamp);
+            _spriteBatch.Draw(renderTarget, dst, Color.White);
+            _spriteBatch.End();
+
+            base.Draw(gameTime);
             base.Draw(gameTime);
         }
     }
