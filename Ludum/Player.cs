@@ -12,11 +12,14 @@ namespace Ludum
         public Vector2 Position;
         public bool Active;
         public int Health;
+        public int Power;
         public float MOVE_SPEED = 0.4f;
         public Animation PlayerAnimation;
         public List<Animation> MoveSet;
         KeyboardState currentKeys;
         KeyboardState previousKeys;
+        private float previousDepletionTime;
+        private float depletionTime;
 
         public int Width
         {
@@ -35,14 +38,21 @@ namespace Ludum
             Position = position;
             Active = true;
             Health = 100;
+            Power = 100;
+            previousDepletionTime = 0f;
+            depletionTime = 1f;
         }
 
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, float time)
         
         {
             currentKeys = Keyboard.GetState();
             if (!Active) return; //TODO Game over
-
+            if ((time - previousDepletionTime > depletionTime))
+            {
+                previousDepletionTime = time;
+                Power--;
+            }
             PlayerAnimation.Position = Position;
             PlayerAnimation.Update(gameTime);
             if (currentKeys.IsKeyDown(Keys.Left) || currentKeys.IsKeyDown(Keys.A))
@@ -55,7 +65,11 @@ namespace Ludum
                 Position.X += MOVE_SPEED;
                 PlayerAnimation.Pause = false;
             }
-            
+            if (currentKeys.IsKeyDown(Keys.Down) || currentKeys.IsKeyDown(Keys.S))
+            {
+                
+            }
+
             previousKeys = currentKeys;
         }
         public void Draw(SpriteBatch spriteBatch)

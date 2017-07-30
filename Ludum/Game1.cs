@@ -41,6 +41,7 @@ namespace Ludum
         Menu MenuManager;
         Texture2D healthContainer;
         Texture2D healthSegement;
+        Texture2D powerSegment;
 
         KeyboardState currentKeys;
         KeyboardState previousKeys;
@@ -91,17 +92,24 @@ namespace Ludum
             // Create a new SpriteBatch, which can be used to draw textures.
             Vector2 playerPosition = START_POS;
             List<Animation> playerMoveSet = new List<Animation>();
+
             Texture2D idleTexture = Content.Load<Texture2D>("player_idle");
             Animation idle = new Animation();
             idle.Initialize(idleTexture, playerPosition, 32, 32, 4, 150, Color.White, 1f, true);
             playerMoveSet.Add(idle);
+
+            Texture2D crouchTexture = Content.Load<Texture2D>("player_crouch");
+            Animation crouch = new Animation();
+            crouch.Initialize(crouchTexture, playerPosition, 32, 21, 4, 150, Color.White, 1f, true);
+            playerMoveSet.Add(crouch);
             player.Initialize(playerMoveSet, playerPosition);
 
             enemyTexture = Content.Load<Texture2D>("enemy");
             projectileTexture = Content.Load<Texture2D>("bullet");
             healthContainer = Content.Load<Texture2D>("container");
             healthSegement = Content.Load<Texture2D>("health5");
-            MenuManager.Initialize(healthContainer, healthSegement);
+            powerSegment = Content.Load<Texture2D>("power5");
+            MenuManager.Initialize(healthContainer, healthSegement, powerSegment);
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -130,7 +138,7 @@ namespace Ludum
                 {
                     isPaused = true;
                 }
-                player.Update(gameTime);
+                player.Update(gameTime, time);
                 if (currentKeys.IsKeyDown(Keys.Space) && previousKeys.IsKeyUp(Keys.Space))
                 {
                     Shoot(player.Position, Vector2.UnitX);
@@ -148,7 +156,7 @@ namespace Ludum
                 isPaused = false;
             }
             previousKeys = currentKeys;
-            MenuManager.Update(player.Health);
+            MenuManager.Update(player.Health, player.Power);
             base.Update(gameTime);
         }
 
