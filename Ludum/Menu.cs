@@ -12,6 +12,7 @@ namespace Ludum
         public Texture2D Container;
         public Texture2D HealthSegment;
         public Texture2D PowerSegment;
+        public Texture2D KeyPadTex;
         public bool KeyPad;
         int Health;
         int Power;
@@ -22,7 +23,6 @@ namespace Ludum
         const int POWER_X = 50;
         const int POWER_Y = 20;
 
-
         public void Initialize(Texture2D container, Texture2D HSegment, Texture2D PSegment)
         {
             Container = container;
@@ -31,12 +31,13 @@ namespace Ludum
             HealthSegment = HSegment;
             PowerSegment = PSegment;
         }
-        public void Update(int health, int power)
+        public void Update(int health, int power, bool Pad)
         {
             Health = health;
             Power = power;
             PowerSegments = (int)Math.Round(Power / 4.54);
             HealthSegments = (int)Math.Round(Health / 4.54);
+            KeyPad = Pad;
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -49,6 +50,10 @@ namespace Ludum
             for (int i = 0; i < PowerSegments; i++)
             {
                 spriteBatch.Draw(PowerSegment, new Vector2((2 * i) + 3 + HEALTH_X, POWER_Y + 2));
+            }
+            if (KeyPad)
+            {
+                spriteBatch.Draw(KeyPadTex, new Vector2(140, 140));
             }
         }
     }

@@ -43,6 +43,7 @@ namespace Ludum
         Texture2D healthSegement;
         Texture2D powerSegment;
         Texture2D keyPadTex;
+        bool KeyPad;
 
         KeyboardState currentKeys;
         KeyboardState previousKeys;
@@ -159,7 +160,18 @@ namespace Ludum
                 isPaused = false;
             }
             previousKeys = currentKeys;
-            MenuManager.Update(player.Health, player.Power);
+            if (!KeyPad)
+            {
+                if (currentKeys.IsKeyDown(Keys.R) && previousKeys.IsKeyUp(Keys.R))
+                {
+                    KeyPad = true;
+                }
+            }
+            else if (currentKeys.IsKeyDown(Keys.R) && previousKeys.IsKeyUp(Keys.R))
+            {
+                KeyPad = false;
+            }
+            MenuManager.Update(player.Health, player.Power, KeyPad);
             base.Update(gameTime);
         }
 

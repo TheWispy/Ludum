@@ -40,7 +40,7 @@ namespace Ludum
             Health = 100;
             Power = 100;
             previousDepletionTime = 0f;
-            depletionTime = 1f;
+            depletionTime = 0.1f;
         }
 
         public void Update(GameTime gameTime, float time)
