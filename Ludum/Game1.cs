@@ -131,10 +131,18 @@ namespace Ludum
             powerSegment = Content.Load<Texture2D>("power5");
             keyPadTex = Content.Load<Texture2D>("numpad");
 
-            List<Texture2D> numberTexture = new List<Texture2D>();
-
-            MenuManager.Initialize(healthContainer, healthSegement, powerSegment, keyPadTex);
-            
+            List<Texture2D> numberList = new List<Texture2D>();
+            numberList.Add(Content.Load<Texture2D>("1"));
+            numberList.Add(Content.Load<Texture2D>("2"));
+            numberList.Add(Content.Load<Texture2D>("3"));
+            numberList.Add(Content.Load<Texture2D>("4"));
+            numberList.Add(Content.Load<Texture2D>("5"));
+            numberList.Add(Content.Load<Texture2D>("6"));
+            numberList.Add(Content.Load<Texture2D>("7"));
+            numberList.Add(Content.Load<Texture2D>("8"));
+            numberList.Add(Content.Load<Texture2D>("9"));
+            numberList.Add(Content.Load<Texture2D>("0"));
+            MenuManager.Initialize(healthContainer, healthSegement, powerSegment, keyPadTex, numberList);
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -205,7 +213,7 @@ namespace Ludum
             }
             
             previousKeys = currentKeys;
-            MenuManager.Update(player.Health, player.Power, KeyPad);
+            MenuManager.Update(player.Health, player.Power, KeyPad, currentCode);
             base.Update(gameTime);
         }
 

@@ -13,6 +13,8 @@ namespace Ludum
         public Texture2D HealthSegment;
         public Texture2D PowerSegment;
         public Texture2D KeyPadTex;
+        public List<Texture2D> NumberList;
+        public List<int> Code;
         public bool KeyPad;
         int Health;
         int Power;
@@ -23,7 +25,7 @@ namespace Ludum
         const int POWER_X = 10;
         const int POWER_Y = 20;
 
-        public void Initialize(Texture2D container, Texture2D HSegment, Texture2D PSegment, Texture2D Pad)
+        public void Initialize(Texture2D container, Texture2D HSegment, Texture2D PSegment, Texture2D Pad, List<Texture2D> numberList)
         {
             Container = container;
             Health = 100;
@@ -31,8 +33,9 @@ namespace Ludum
             HealthSegment = HSegment;
             PowerSegment = PSegment;
             KeyPadTex = Pad;
+            NumberList = numberList;
         }
-        public void Update(int health, int power, bool Pad)
+        public void Update(int health, int power, bool Pad, List<int> code)
         {
             Health = health;
             Power = power;
