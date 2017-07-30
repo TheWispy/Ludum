@@ -20,10 +20,10 @@ namespace Ludum
         public bool isPaused = false;
         float time;
         Player player;
+        Vector2 START_POS = new Vector2(20, VIRTUAL_HEIGHT - 20);
 
         //Enemies
         Texture2D enemyTexture;
-        List<Enemy> enemies;
         float enemySpawnTime;
         float previousSpawnTime;
 
@@ -31,8 +31,12 @@ namespace Ludum
         Texture2D projectileTexture;
         TimeSpan projectileSpawnTime;
         TimeSpan previousLaserSpawnTime;
-        List<Projectile> projectiles;
         Random random;
+
+        //Levels
+        Level currentLevel;
+        public int levelCount;
+        
 
         KeyboardState currentKeys;
         KeyboardState previousKeys;
@@ -51,17 +55,16 @@ namespace Ludum
         /// </summary>
         protected override void Initialize()
         {
+            levelCount = 0;
             PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
             renderTarget = new RenderTarget2D(graphics.GraphicsDevice, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, false, SurfaceFormat.Color,
                 DepthFormat.None, pp.MultiSampleCount, RenderTargetUsage.DiscardContents);
 
             player = new Player();
-
-            enemies = new List<Enemy>();
+            currentLevel = new Level();
+            currentLevel.Initialize(levelCount);
             previousSpawnTime = 0f;
             enemySpawnTime = 2f;
-
-            projectiles = new List<Projectile>();
             const float SECONDS_IN_MINUTE = 60f;
             const float RATE_OF_FIRE = 200f;
             projectileSpawnTime = TimeSpan.FromSeconds(SECONDS_IN_MINUTE / RATE_OF_FIRE);
@@ -79,7 +82,7 @@ namespace Ludum
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            Vector2 playerPosition = new Vector2(20, VIRTUAL_HEIGHT - 20);
+            Vector2 playerPosition = START_POS;
             List<Animation> playerMoveSet = new List<Animation>();
             Texture2D idleTexture = Content.Load<Texture2D>("player_idle");
             Animation idle = new Animation();
@@ -123,8 +126,12 @@ namespace Ludum
                     Shoot(player.Position, Vector2.UnitX);
                 }
                 UpdateEnemies(gameTime);
-                UpdateProjectiles(gameTime);
+                currentLevel.Update(gameTime);
                 UpdateCollision();
+                if (currentLevel.isComplete)
+                {
+                    currentLevel = newLevel();
+                }
             }
             else if (currentKeys.IsKeyDown(Keys.P) && previousKeys.IsKeyUp(Keys.P))
             {
@@ -142,9 +149,8 @@ namespace Ludum
 
             Enemy enemy = new Enemy();
             enemy.Initialize(enemyAnimation, position);
-            enemies.Add(enemy);
+            currentLevel.enemies.Add(enemy);
         }
-
         private void UpdateCollision()
         {
             // Use the Rectangle’s built-in intersect function to determine if two objects are overlapping
@@ -154,53 +160,50 @@ namespace Ludum
             // Only create the rectangle once for the player
             rectangle1 = new Rectangle((int)player.Position.X, (int)player.Position.Y, player.Width, player.Height);
             // Do the collision between the player and the enemies
-            for (int i = 0; i < enemies.Count; i++)
+            for (int i = 0; i < currentLevel.enemies.Count; i++)
             {
-                rectangle2 = new Rectangle((int)enemies[i].Position.X, (int)enemies[i].Position.Y, enemies[i].Width, enemies[i].Height);
-                for (int j = 0; j < projectiles.Count; j++)
+                rectangle2 = new Rectangle((int)currentLevel.enemies[i].Position.X, (int)currentLevel.enemies[i].Position.Y, currentLevel.enemies[i].Width, currentLevel.enemies[i].Height);
+                for (int j = 0; j < currentLevel.projectiles.Count; j++)
                 {
-                    rectangle3 = new Rectangle((int)projectiles[j].Position.X, (int)projectiles[j].Position.Y,
-                        projectiles[j].Width, projectiles[j].Height);
+                    rectangle3 = new Rectangle((int)currentLevel.projectiles[j].Position.X, (int)currentLevel.projectiles[j].Position.Y,
+                        currentLevel.projectiles[j].Width, currentLevel.projectiles[j].Height);
                     if (rectangle2.Intersects(rectangle3))
                     {
-                        enemies[i].Health -= projectiles[j].Damage;
-                        projectiles[j].Active = false;
-                        if (enemies[i].Health <= 0)
+                        currentLevel.enemies[i].Health -= currentLevel.projectiles[j].Damage;
+                        currentLevel.projectiles[j].Active = false;
+                        if (currentLevel.enemies[i].Health <= 0)
                         {
-                            enemies[i].Active = false;
+                            currentLevel.enemies[i].Active = false;
                         }
                     }
                 }
                 if (rectangle1.Intersects(rectangle2))
                 {
-                    player.Health -= enemies[i].Damage;
+                    player.Health -= currentLevel.enemies[i].Damage;
                     Debug.WriteLine(player.Health);
-                    enemies[i].Health = 0;
+                    currentLevel.enemies[i].Health = 0;
                     if (player.Health <= 0)
                     {
                         player.Active = false;
                     }
                 }
             }
-            
         }
 
         private void UpdateEnemies(GameTime gameTime)
         {
-            if (time - previousSpawnTime > enemySpawnTime)
+            if ((time - previousSpawnTime > enemySpawnTime) && !currentLevel.isComplete)
             {
                 previousSpawnTime = time;
                 AddEnemy();
+                currentLevel.enemyCount++;
             }
-            if (!isPaused)
+            for (int i = 0; i < currentLevel.enemies.Count; i++)
             {
-                for (int i = 0; i < enemies.Count; i++)
+                currentLevel.enemies[i].Update(gameTime);
+                if (!currentLevel.enemies[i].Active)
                 {
-                    enemies[i].Update(gameTime);
-                    if (!enemies[i].Active)
-                    {
-                        enemies.RemoveAt(i);
-                    }
+                    currentLevel.enemies.RemoveAt(i);
                 }
             }
         }
@@ -212,22 +215,7 @@ namespace Ludum
             Animation projectileAnim = new Animation();
             projectileAnim.Initialize(projectileTexture, position, 16, 8, 6, 80, Color.White, 1f, true);
             projectile.Initialize(projectileAnim, position, direction);
-            projectiles.Add(projectile);
-        }
-
-        private void UpdateProjectiles(GameTime gameTime)
-        {
-            if (!isPaused)
-            {
-                for (int i = 0; i < projectiles.Count; i++)
-                {
-                    projectiles[i].Update(gameTime);
-                    if (!projectiles[i].Active)
-                    {
-                        projectiles.RemoveAt(i);
-                    }
-                }
-            }
+            currentLevel.projectiles.Add(projectile);
         }
 
         /// This is called when the game should draw itself.
@@ -241,16 +229,7 @@ namespace Ludum
             graphics.GraphicsDevice.Clear(Color.LightGray);
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             player.Draw(_spriteBatch);
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                enemies[i].Draw(_spriteBatch);
-                //Debug.WriteLine(enemies[i].Position+ " "+enemies[i].Width+" "+enemies[i].Height );
-            }
-            for (int i = 0; i < projectiles.Count; i++)
-            {
-                projectiles[i].Draw(_spriteBatch);
-                Debug.WriteLine(projectiles[i].Position+ " "+projectiles[i].Width+" "+projectiles[i].Height );
-            }
+            currentLevel.Draw(_spriteBatch);
             _spriteBatch.End();
 
             // clear to get black bars
@@ -264,6 +243,15 @@ namespace Ludum
             _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        private Level newLevel()
+        {
+            levelCount++;
+            player.Position = START_POS;
+            Level level = new Level();
+            level.Initialize(levelCount);
+            return level;
         }
 
         private Rectangle barPlace()
