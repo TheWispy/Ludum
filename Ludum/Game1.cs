@@ -50,6 +50,8 @@ namespace Ludum
         public List<int> codeBox;
         public List<int> currentCode;
         public List<int> previousCode;
+        public KeyboardState currentPad;
+        public KeyboardState previousPad;
 
         KeyboardState currentKeys;
         KeyboardState previousKeys;
@@ -73,17 +75,17 @@ namespace Ludum
             PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
             renderTarget = new RenderTarget2D(graphics.GraphicsDevice, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, false, SurfaceFormat.Color,
                 DepthFormat.None, pp.MultiSampleCount, RenderTargetUsage.DiscardContents);
-
+            previousPad = Keyboard.GetState();
             player = new Player();
             currentLevel = new Level();
-            currentLevel.Initialize(levelCount);
+            currentLevel.Initialize(levelCount, (int)Math.Round(Difficulty / 1.34));
             previousSpawnTime = 0f;
             enemySpawnTime = 2f;
             const float SECONDS_IN_MINUTE = 60f;
             const float RATE_OF_FIRE = 200f;
             projectileSpawnTime = TimeSpan.FromSeconds(SECONDS_IN_MINUTE / RATE_OF_FIRE);
             previousLaserSpawnTime = TimeSpan.Zero;
-            Difficulty = 4;
+            Difficulty = 5;
             MenuManager = new Menu();
             codeBox = new List<int>();
             previousCode = GetKeyCode();
@@ -93,8 +95,8 @@ namespace Ludum
                 currentCode = GetKeyCode();
             }
             
-            
             KeyPad = false;
+            currentPad = Keyboard.GetState();
 
             base.Initialize();
         }
@@ -106,6 +108,7 @@ namespace Ludum
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
+            
             Vector2 playerPosition = START_POS;
             List<Animation> playerMoveSet = new List<Animation>();
 
@@ -127,7 +130,11 @@ namespace Ludum
             healthSegement = Content.Load<Texture2D>("health5");
             powerSegment = Content.Load<Texture2D>("power5");
             keyPadTex = Content.Load<Texture2D>("numpad");
+
+            List<Texture2D> numberTexture = new List<Texture2D>();
+
             MenuManager.Initialize(healthContainer, healthSegement, powerSegment, keyPadTex);
+            
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -172,18 +179,31 @@ namespace Ludum
             else if (currentKeys.IsKeyDown(Keys.P) && previousKeys.IsKeyUp(Keys.P))
             {
                 isPaused = false;
-            } 
-            if (!KeyPad)
+            }
+            if (KeyPad)
+            {
+                if (currentKeys.IsKeyDown(Keys.R) && previousKeys.IsKeyUp(Keys.R))
+                {
+                    KeyPad = false;
+
+                }
+                UpdateKeyPad();
+            }
+            else if (!KeyPad)
             {
                 if (currentKeys.IsKeyDown(Keys.R) && previousKeys.IsKeyUp(Keys.R))
                 {
                     KeyPad = true;
+                    for (int i = 0; i < currentCode.Count; i++)
+                    {
+                        Debug.Write(currentCode[i]);
+                    }
+                    Debug.WriteLine(" ");
+
+                    UpdateKeyPad();
                 }
             }
-            if (KeyPad)
-            {
-                UpdateKeyPad();
-            }
+            
             previousKeys = currentKeys;
             MenuManager.Update(player.Health, player.Power, KeyPad);
             base.Update(gameTime);
@@ -244,7 +264,6 @@ namespace Ludum
             {
                 previousSpawnTime = time;
                 AddEnemy();
-                currentLevel.enemyCount++;
             }
             for (int i = 0; i < currentLevel.enemies.Count; i++)
             {
@@ -252,6 +271,7 @@ namespace Ludum
                 if (!currentLevel.enemies[i].Active)
                 {
                     currentLevel.enemies.RemoveAt(i);
+                    currentLevel.killCount++;
                 }
             }
         }
@@ -299,7 +319,11 @@ namespace Ludum
             levelCount++;
             player.Position = START_POS;
             Level level = new Level();
-            level.Initialize(levelCount);
+            Difficulty = Difficulty + random.Next(0, 2);
+            level.Initialize(levelCount, (int)Math.Round(Difficulty/1.34));
+            Debug.WriteLine("Difficulty: " + Difficulty + "  N: " + levelCount + "  Enemies:" + (int)Math.Round(Difficulty / 1.34));
+            currentCode = GetKeyCode();
+            codeBox.Clear();
             return level;
         }
 
@@ -307,74 +331,98 @@ namespace Ludum
         {
             if (KeyPad)
             {
-                if (previousCode.Equals(currentCode))
+                currentPad = Keyboard.GetState();
+                if (SequenceEqual(currentCode, previousCode))
                 {
                     currentCode = GetKeyCode();
+                    Debug.WriteLine(currentCode[0] + " " + currentCode[1] + " " + currentCode[2] + " " + currentCode[3]);
+                }
+                if (SequenceEqual(codeBox, currentCode))
+                {
+                    player.Power = 100;
+                    KeyPad = false;
+                    currentCode = GetKeyCode();
+                    codeBox.Clear();
                 }
                 else
-                {
-                    Debug.WriteLine(currentCode[0]+" "+ currentCode[1] + " " + currentCode[2] + " " + currentCode[3]);
-                    currentKeys = Keyboard.GetState();
+                {   
                     int correctKey = currentCode[codeBox.Count];
                     int input = -1;
-                    if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D0) || previousKeys.IsKeyUp(Keys.NumPad0))
+                    if ((currentPad.IsKeyDown(Keys.D0) || currentPad.IsKeyDown(Keys.NumPad0)) && (previousPad.IsKeyUp(Keys.D0) || previousPad.IsKeyUp(Keys.NumPad0)))
                     {
                         input = 0;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D1) || previousKeys.IsKeyUp(Keys.NumPad1))
+                    else if ((currentPad.IsKeyDown(Keys.D1) || currentPad.IsKeyDown(Keys.NumPad1)) && (previousPad.IsKeyUp(Keys.D1) || previousPad.IsKeyUp(Keys.NumPad1)))
                     {
                         input = 1;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D2) || previousKeys.IsKeyUp(Keys.NumPad2))
+                    else if ((currentPad.IsKeyDown(Keys.D2) || currentPad.IsKeyDown(Keys.NumPad2)) && (previousPad.IsKeyUp(Keys.D2) || previousPad.IsKeyUp(Keys.NumPad2)))
                     {
                         input = 2;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D3) || previousKeys.IsKeyUp(Keys.NumPad3))
+                    else if ((currentPad.IsKeyDown(Keys.D3) || currentPad.IsKeyDown(Keys.NumPad3)) && (previousPad.IsKeyUp(Keys.D3) || previousPad.IsKeyUp(Keys.NumPad3)))
                     {
                         input = 3;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D4) || previousKeys.IsKeyUp(Keys.NumPad4))
+                    else if ((currentPad.IsKeyDown(Keys.D4) || currentPad.IsKeyDown(Keys.NumPad4)) && (previousPad.IsKeyUp(Keys.D4) || previousPad.IsKeyUp(Keys.NumPad4)))
                     {
                         input = 4;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D5) || previousKeys.IsKeyUp(Keys.NumPad5))
+                    else if ((currentPad.IsKeyDown(Keys.D5) || currentPad.IsKeyDown(Keys.NumPad5)) && (previousPad.IsKeyUp(Keys.D5) || previousPad.IsKeyUp(Keys.NumPad5)))
                     {
                         input = 5;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D6) || previousKeys.IsKeyUp(Keys.NumPad6))
+                    else if ((currentPad.IsKeyDown(Keys.D6) || currentPad.IsKeyDown(Keys.NumPad6)) && (previousPad.IsKeyUp(Keys.D6) || previousPad.IsKeyUp(Keys.NumPad6)))
                     {
                         input = 6;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D7) || previousKeys.IsKeyUp(Keys.NumPad7))
+                    else if ((currentPad.IsKeyDown(Keys.D7) || currentPad.IsKeyDown(Keys.NumPad7)) && (previousPad.IsKeyUp(Keys.D7) || previousPad.IsKeyUp(Keys.NumPad7)))
                     {
                         input = 7;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D8) || previousKeys.IsKeyUp(Keys.NumPad8))
+                    else if ((currentPad.IsKeyDown(Keys.D8) || currentPad.IsKeyDown(Keys.NumPad8)) && (previousPad.IsKeyUp(Keys.D8) || previousPad.IsKeyUp(Keys.NumPad8)))
                     {
                         input = 8;
                     }
-                    else if (currentKeys.IsKeyDown(Keys.D0) || currentKeys.IsKeyDown(Keys.NumPad0) && previousKeys.IsKeyUp(Keys.D9) || previousKeys.IsKeyUp(Keys.NumPad9))
+                    else if ((currentPad.IsKeyDown(Keys.D9) || currentPad.IsKeyDown(Keys.NumPad9)) && (previousPad.IsKeyUp(Keys.D9) || previousPad.IsKeyUp(Keys.NumPad9)))
                     {
                         input = 9;
                     }
-                    if (input == -1)
+                    if (input == -1 || currentPad.Equals(previousPad))
                     {
+                        previousPad = currentPad;
                         return;
                     }
+                    previousPad = currentPad;
                     Debug.WriteLine("input "+input);
                     codeBox.Add(input);
                     if (input != correctKey)
                     {
                         codeBox.Clear();
-                        Debug.Write(input + "IS WRONG");
+                        Debug.Write(input + "IS WRONG, Correct key was "+correctKey);
                     }
-                    if (codeBox.Equals(currentCode))
+                    if (input == correctKey)
                     {
-                        player.Power = 100;
-                        KeyPad = false;
+                        Debug.WriteLine("CORRECT");
                     }
                 }
             }
+        }
+
+        private bool SequenceEqual(List<int> list1, List<int> list2)
+        {
+            if(list1.Count == 0 || list2.Count == 0 || list1.Count != list2.Count)
+            {
+                return false;
+            }
+            for (int i = 0; i < list1.Count; i++)
+            {
+                if (list1[i] != list2[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private List<int> GetKeyCode()

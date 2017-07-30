@@ -31,7 +31,7 @@ namespace Ludum
             EnemyAnimation = animation;
             Position = position;
             Active = true;
-            Health = 10;
+            Health = 100;
             Damage = 20;
             enemyMoveSpeed = 0.4f;
         }

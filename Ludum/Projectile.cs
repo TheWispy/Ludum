@@ -10,7 +10,7 @@ namespace Ludum
         float laserMoveSpeed = 2f;
         public Vector2 Direction;
         public Vector2 Position;
-        public int Damage = 1;
+        public int Damage = 25;
         public bool Active;
         public int Width
         {

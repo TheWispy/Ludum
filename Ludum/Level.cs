@@ -11,26 +11,30 @@ namespace Ludum
     {
         public int levelNo;
         public List<Enemy> enemies;
-        public int enemyCount;
+        public int killCount;
         public List<Projectile> projectiles;
+        public int enemyCount;
         public bool isComplete = false;
 
-        public void Initialize(int l)
+        public void Initialize(int l, int count)
         {
+            killCount = 0;
             isComplete = false;
-            enemyCount = 0;
             levelNo = l;
             projectiles = new List<Projectile>();
             enemies = new List<Enemy>();
+            enemyCount = count;
         }
+
         public void Update(GameTime gameTime)
         {
-            if (enemyCount == levelNo && enemies.Count == 0)
+            if (killCount == enemyCount)
             {
                 isComplete = true;
             }
             UpdateProjectiles(gameTime);
         }
+
         public void Draw(SpriteBatch _spriteBatch)
         {
             for (int i = 0; i < enemies.Count; i++)

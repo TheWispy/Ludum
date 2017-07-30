@@ -18,9 +18,9 @@ namespace Ludum
         int Power;
         int HealthSegments;
         int PowerSegments;
-        const int HEALTH_X = 50;
+        const int HEALTH_X = 10;
         const int HEALTH_Y = 5;
-        const int POWER_X = 50;
+        const int POWER_X = 10;
         const int POWER_Y = 20;
 
         public void Initialize(Texture2D container, Texture2D HSegment, Texture2D PSegment, Texture2D Pad)
@@ -54,7 +54,7 @@ namespace Ludum
             }
             if (KeyPad)
             {
-                spriteBatch.Draw(KeyPadTex, new Vector2(140, 140));
+                spriteBatch.Draw(KeyPadTex, new Vector2(140, 20));
             }
         }
     }
