@@ -12,7 +12,6 @@ namespace Ludum
         public Vector2 Position;
         public int Damage = 1;
         public bool Active;
-        public int Range;
         public int Width
         {
             get { return LaserAnimation.FrameWidth; }

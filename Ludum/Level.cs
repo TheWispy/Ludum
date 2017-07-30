@@ -41,7 +41,6 @@ namespace Ludum
             for (int i = 0; i < projectiles.Count; i++)
             {
                 projectiles[i].Draw(_spriteBatch);
-                Debug.WriteLine(projectiles[i].Position + " " + projectiles[i].Width + " " + projectiles[i].Height);
             }
         }
         

@@ -23,13 +23,14 @@ namespace Ludum
         const int POWER_X = 50;
         const int POWER_Y = 20;
 
-        public void Initialize(Texture2D container, Texture2D HSegment, Texture2D PSegment)
+        public void Initialize(Texture2D container, Texture2D HSegment, Texture2D PSegment, Texture2D Pad)
         {
             Container = container;
             Health = 100;
             Power = 100;
             HealthSegment = HSegment;
             PowerSegment = PSegment;
+            KeyPadTex = Pad;
         }
         public void Update(int health, int power, bool Pad)
         {
