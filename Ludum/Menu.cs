@@ -12,6 +12,7 @@ namespace Ludum
         public Texture2D Container;
         public Texture2D HealthSegment;
         public Texture2D PowerSegment;
+        public bool KeyPad;
         int Health;
         int Power;
         int HealthSegments;

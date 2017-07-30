@@ -42,10 +42,11 @@ namespace Ludum
         Texture2D healthContainer;
         Texture2D healthSegement;
         Texture2D powerSegment;
+        Texture2D keyPadTex;
 
         KeyboardState currentKeys;
         KeyboardState previousKeys;
-
+        
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -106,9 +107,11 @@ namespace Ludum
 
             enemyTexture = Content.Load<Texture2D>("enemy");
             projectileTexture = Content.Load<Texture2D>("bullet");
+
             healthContainer = Content.Load<Texture2D>("container");
             healthSegement = Content.Load<Texture2D>("health5");
             powerSegment = Content.Load<Texture2D>("power5");
+            keyPadTex = Content.Load<Texture2D>("numpad");
             MenuManager.Initialize(healthContainer, healthSegement, powerSegment);
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -139,7 +142,7 @@ namespace Ludum
                     isPaused = true;
                 }
                 player.Update(gameTime, time);
-                if (currentKeys.IsKeyDown(Keys.Space) && previousKeys.IsKeyUp(Keys.Space))
+                if (currentKeys.IsKeyDown(Keys.Space) && previousKeys.IsKeyUp(Keys.Space) && player.Active)
                 {
                     Shoot(player.Position, Vector2.UnitX);
                 }

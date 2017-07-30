@@ -53,21 +53,30 @@ namespace Ludum
                 previousDepletionTime = time;
                 Power--;
             }
-            PlayerAnimation.Position = Position;
-            PlayerAnimation.Update(gameTime);
+            for (int i = 0; i < MoveSet.Count; i++)
+            {
+                MoveSet[i].Position = Position;
+                MoveSet[i].Update(gameTime);
+            }
             if (currentKeys.IsKeyDown(Keys.Left) || currentKeys.IsKeyDown(Keys.A))
             {
                 Position.X -= MOVE_SPEED;
+                PlayerAnimation = MoveSet[0];
                 PlayerAnimation.Pause = false;
             }
-            if (currentKeys.IsKeyDown(Keys.Right) || currentKeys.IsKeyDown(Keys.D))
+            else if (currentKeys.IsKeyDown(Keys.Right) || currentKeys.IsKeyDown(Keys.D))
             {
                 Position.X += MOVE_SPEED;
+                PlayerAnimation = MoveSet[0];
                 PlayerAnimation.Pause = false;
             }
-            if (currentKeys.IsKeyDown(Keys.Down) || currentKeys.IsKeyDown(Keys.S))
+            else if (currentKeys.IsKeyDown(Keys.Down) || currentKeys.IsKeyDown(Keys.S))
             {
-                
+                PlayerAnimation = MoveSet[1];
+            }
+            else
+            {
+                PlayerAnimation = MoveSet[0];
             }
 
             previousKeys = currentKeys;
