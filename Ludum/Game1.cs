@@ -36,7 +36,11 @@ namespace Ludum
         //Levels
         Level currentLevel;
         public int levelCount;
-        
+
+        //Menu
+        Menu MenuManager;
+        Texture2D healthContainer;
+        Texture2D healthSegement;
 
         KeyboardState currentKeys;
         KeyboardState previousKeys;
@@ -70,6 +74,9 @@ namespace Ludum
             projectileSpawnTime = TimeSpan.FromSeconds(SECONDS_IN_MINUTE / RATE_OF_FIRE);
             previousLaserSpawnTime = TimeSpan.Zero;
 
+            MenuManager = new Menu();
+            
+
             random = new Random();
 
             base.Initialize();
@@ -92,6 +99,9 @@ namespace Ludum
 
             enemyTexture = Content.Load<Texture2D>("enemy");
             projectileTexture = Content.Load<Texture2D>("bullet");
+            healthContainer = Content.Load<Texture2D>("container");
+            healthSegement = Content.Load<Texture2D>("health5");
+            MenuManager.Initialize(healthContainer, healthSegement);
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -138,6 +148,7 @@ namespace Ludum
                 isPaused = false;
             }
             previousKeys = currentKeys;
+            MenuManager.Update(player.Health);
             base.Update(gameTime);
         }
 
@@ -230,6 +241,7 @@ namespace Ludum
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             player.Draw(_spriteBatch);
             currentLevel.Draw(_spriteBatch);
+            MenuManager.Draw(_spriteBatch);
             _spriteBatch.End();
 
             // clear to get black bars

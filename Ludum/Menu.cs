@@ -9,32 +9,32 @@ namespace Ludum
 {
     class Menu
     {
-        public Vector2 Position;
-        public bool Active;
-        public int Health;
-        public float MOVE_SPEED = 0.4f;
-        public Animation PlayerAnimation;
-        public List<Animation> MoveSet;
-        KeyboardState currentKeys;
-        KeyboardState previousKeys;
+        public Texture2D HealthContainer;
+        public Texture2D HealthSegment;
+        int Health;
+        int Segments;
+        const int HEALTH_X = 50;
+        const int HEALTH_Y = 5;
+        
 
-        public int Width
+        public void Initialize(Texture2D container, Texture2D segment)
         {
-            get { return PlayerAnimation.FrameWidth; }
-        }
-
-        public int Height
-        {
-            get { return PlayerAnimation.FrameHeight; }
-        }
-
-        public void Initialize(List<Animation> moveSet, Vector2 position)
-        {
-            MoveSet = moveSet;
-            PlayerAnimation = MoveSet[0];
-            Position = position;
-            Active = true;
+            HealthContainer = container;
             Health = 100;
+            HealthSegment = segment;
+        }
+        public void Update(int health)
+        {
+            Health = health;
+            Segments = (int)Math.Round(Health / 4.54);
+        }
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(HealthContainer, new Vector2(40,40));
+            for (int i = 0; i < Segments; i++)
+            {
+                spriteBatch.Draw(HealthSegment, new Vector2((2 * i) + 3 + 40, (40 + 2)));
+            }
         }
     }
 }
