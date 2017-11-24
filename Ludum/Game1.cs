@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Ludum
 {
@@ -44,7 +45,10 @@ namespace Ludum
         Texture2D healthSegement;
         Texture2D powerSegment;
         Texture2D keyPadTex;
+        Texture2D bg;
         public bool KeyPad;
+
+        List<SoundEffect> soundEffects;
 
         //Keypad
         public List<int> codeBox;
@@ -70,6 +74,7 @@ namespace Ludum
         /// </summary>
         protected override void Initialize()
         {
+            soundEffects = new List<SoundEffect>();
             random = new Random();
             levelCount = 0;
             PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
@@ -108,7 +113,12 @@ namespace Ludum
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            
+
+            soundEffects.Add(Content.Load<SoundEffect>("blast"));
+            soundEffects.Add(Content.Load<SoundEffect>("thump"));
+            soundEffects.Add(Content.Load<SoundEffect>("tri"));
+            soundEffects.Add(Content.Load<SoundEffect>("splode"));
+
             Vector2 playerPosition = START_POS;
             List<Animation> playerMoveSet = new List<Animation>();
 
@@ -121,7 +131,7 @@ namespace Ludum
             Animation crouch = new Animation();
             crouch.Initialize(crouchTexture, playerPosition, 32, 21, 4, 150, Color.White, 1f, true);
             playerMoveSet.Add(crouch);
-            player.Initialize(playerMoveSet, playerPosition);
+            player.Initialize(playerMoveSet, playerPosition, Difficulty);
 
             enemyTexture = Content.Load<Texture2D>("enemy");
             projectileTexture = Content.Load<Texture2D>("bullet");
@@ -130,8 +140,10 @@ namespace Ludum
             healthSegement = Content.Load<Texture2D>("health5");
             powerSegment = Content.Load<Texture2D>("power5");
             keyPadTex = Content.Load<Texture2D>("numpad");
+            bg = Content.Load<Texture2D>("bg");
 
             List<Texture2D> numberList = new List<Texture2D>();
+            numberList.Add(Content.Load<Texture2D>("0"));
             numberList.Add(Content.Load<Texture2D>("1"));
             numberList.Add(Content.Load<Texture2D>("2"));
             numberList.Add(Content.Load<Texture2D>("3"));
@@ -141,7 +153,6 @@ namespace Ludum
             numberList.Add(Content.Load<Texture2D>("7"));
             numberList.Add(Content.Load<Texture2D>("8"));
             numberList.Add(Content.Load<Texture2D>("9"));
-            numberList.Add(Content.Load<Texture2D>("0"));
             MenuManager.Initialize(healthContainer, healthSegement, powerSegment, keyPadTex, numberList);
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -162,6 +173,12 @@ namespace Ludum
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            if (!player.Active)
+            {
+                soundEffects[3].CreateInstance().Play();
+                soundEffects[3].CreateInstance().Play();
+                Exit();
+            }
             currentKeys = Keyboard.GetState();
             if (currentKeys.IsKeyDown(Keys.Escape)) Exit();
             if (!isPaused)
@@ -171,7 +188,7 @@ namespace Ludum
                 {
                     isPaused = true;
                 }
-                player.Update(gameTime, time);
+                player.Update(gameTime, time, Difficulty);
                 if (currentKeys.IsKeyDown(Keys.Space) && previousKeys.IsKeyUp(Keys.Space) && player.Active)
                 {
                     Shoot(player.Position, Vector2.UnitX);
@@ -213,7 +230,7 @@ namespace Ludum
             }
             
             previousKeys = currentKeys;
-            MenuManager.Update(player.Health, player.Power, KeyPad, currentCode);
+            MenuManager.Update(player.Health, player.Power, KeyPad, currentCode, currentLevel.levelNo, Difficulty);
             base.Update(gameTime);
         }
 
@@ -246,6 +263,7 @@ namespace Ludum
                     if (rectangle2.Intersects(rectangle3))
                     {
                         currentLevel.enemies[i].Health -= currentLevel.projectiles[j].Damage;
+                        soundEffects[3].CreateInstance().Play();
                         currentLevel.projectiles[j].Active = false;
                         if (currentLevel.enemies[i].Health <= 0)
                         {
@@ -256,6 +274,7 @@ namespace Ludum
                 if (rectangle1.Intersects(rectangle2))
                 {
                     player.Health -= currentLevel.enemies[i].Damage;
+                    soundEffects[3].CreateInstance().Play();
                     Debug.WriteLine(player.Health);
                     currentLevel.enemies[i].Health = 0;
                     if (player.Health <= 0)
@@ -275,7 +294,7 @@ namespace Ludum
             }
             for (int i = 0; i < currentLevel.enemies.Count; i++)
             {
-                currentLevel.enemies[i].Update(gameTime);
+                currentLevel.enemies[i].Update(gameTime, Difficulty);
                 if (!currentLevel.enemies[i].Active)
                 {
                     currentLevel.enemies.RemoveAt(i);
@@ -287,6 +306,7 @@ namespace Ludum
         public void Shoot(Vector2 position, Vector2 direction)
         {
             Debug.WriteLine("BANG" + System.DateTime.Now.Millisecond);
+            soundEffects[0].CreateInstance().Play();
             Projectile projectile = new Projectile();
             Animation projectileAnim = new Animation();
             projectileAnim.Initialize(projectileTexture, position, 16, 8, 6, 80, Color.White, 1f, true);
@@ -304,6 +324,7 @@ namespace Ludum
             //Draw your stuff
             graphics.GraphicsDevice.Clear(Color.LightGray);
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            _spriteBatch.Draw(bg, Vector2.Zero);
             player.Draw(_spriteBatch);
             currentLevel.Draw(_spriteBatch);
             MenuManager.Draw(_spriteBatch);
@@ -327,7 +348,7 @@ namespace Ludum
             levelCount++;
             player.Position = START_POS;
             Level level = new Level();
-            Difficulty = Difficulty + random.Next(0, 2);
+            Difficulty = Difficulty + random.Next(1, 2);
             level.Initialize(levelCount, (int)Math.Round(Difficulty/1.34));
             Debug.WriteLine("Difficulty: " + Difficulty + "  N: " + levelCount + "  Enemies:" + (int)Math.Round(Difficulty / 1.34));
             currentCode = GetKeyCode();
@@ -347,9 +368,11 @@ namespace Ludum
                 }
                 if (SequenceEqual(codeBox, currentCode))
                 {
+                    player.Health = 100;
                     player.Power = 100;
                     KeyPad = false;
                     currentCode = GetKeyCode();
+                    soundEffects[2].CreateInstance().Play();
                     codeBox.Clear();
                 }
                 else
@@ -408,10 +431,12 @@ namespace Ludum
                     {
                         codeBox.Clear();
                         Debug.Write(input + "IS WRONG, Correct key was "+correctKey);
+                        soundEffects[1].CreateInstance().Play();
                     }
                     if (input == correctKey)
                     {
                         Debug.WriteLine("CORRECT");
+                        soundEffects[2].CreateInstance().Play();
                     }
                 }
             }
@@ -436,7 +461,7 @@ namespace Ludum
         private List<int> GetKeyCode()
         {
             List<int> list = new List<int>();
-            for (int i = 0; i < Difficulty; i++)
+            for (int i = 0; i < (int)(Difficulty*0.5f); i++)
             {
                 list.Add(random.Next(0, 9));
             }

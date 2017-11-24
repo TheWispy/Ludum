@@ -36,9 +36,10 @@ namespace Ludum
             enemyMoveSpeed = 0.4f;
         }
 
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, int Difficulty)
         {
             Position.X -= enemyMoveSpeed;
+            enemyMoveSpeed = Difficulty * 0.05f;
             EnemyAnimation.Position = Position;
             EnemyAnimation.Update(gameTime);
             if (Position.X < -20 || Health <= 0)

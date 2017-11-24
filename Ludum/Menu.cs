@@ -24,6 +24,8 @@ namespace Ludum
         const int HEALTH_Y = 5;
         const int POWER_X = 10;
         const int POWER_Y = 20;
+        int Difficulty;
+        int Level;
 
         public void Initialize(Texture2D container, Texture2D HSegment, Texture2D PSegment, Texture2D Pad, List<Texture2D> numberList)
         {
@@ -35,13 +37,16 @@ namespace Ludum
             KeyPadTex = Pad;
             NumberList = numberList;
         }
-        public void Update(int health, int power, bool Pad, List<int> code)
+        public void Update(int health, int power, bool Pad, List<int> code, int level, int difficulty)
         {
             Health = health;
             Power = power;
             PowerSegments = (int)Math.Round(Power / 4.54);
             HealthSegments = (int)Math.Round(Health / 4.54);
             KeyPad = Pad;
+            Code = code;
+            Level = level;
+            Difficulty = difficulty;
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -55,9 +60,25 @@ namespace Ludum
             {
                 spriteBatch.Draw(PowerSegment, new Vector2((2 * i) + 3 + HEALTH_X, POWER_Y + 2));
             }
+            char[] splitLevel = Level.ToString().ToCharArray();
+            for (int i = 0; i < splitLevel.Length; i++)
+            {
+                spriteBatch.Draw(NumberList[(int)Char.GetNumericValue(splitLevel[i])], new Vector2(60 + (6 * i), 5));
+            }
+            char[] splitDifficulty = Difficulty.ToString().ToCharArray();
+            for (int i = 0; i < splitDifficulty.Length; i++)
+            {
+                spriteBatch.Draw(NumberList[(int)Char.GetNumericValue(splitDifficulty[i])], new Vector2(100 + (6 * i), 5));
+            }
             if (KeyPad)
             {
                 spriteBatch.Draw(KeyPadTex, new Vector2(140, 20));
+                for (int i = 0; i < Code.Count; i++)
+                {
+                    spriteBatch.Draw(NumberList[Code[i]], new Vector2(8*i+100, 20));
+                }
+                
+                
             }
         }
     }

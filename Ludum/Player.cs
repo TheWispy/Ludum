@@ -31,7 +31,7 @@ namespace Ludum
             get { return PlayerAnimation.FrameHeight; }
         }
 
-        public void Initialize(List<Animation> moveSet, Vector2 position)
+        public void Initialize(List<Animation> moveSet, Vector2 position, int Difficulty)
         {
             MoveSet = moveSet;
             PlayerAnimation = MoveSet[0];
@@ -40,18 +40,28 @@ namespace Ludum
             Health = 100;
             Power = 100;
             previousDepletionTime = 0f;
-            depletionTime = 0.3f;
+            depletionTime = 0.5f;
         }
 
-        public void Update(GameTime gameTime, float time)
+        public void Update(GameTime gameTime, float time, int Difficulty)
         
         {
             currentKeys = Keyboard.GetState();
-            if (!Active) return; //TODO Game over
+            if (Power <= 0)
+            {
+                Active = false;
+            }
+            if (!Active)
+            {
+                return; //TODO Game over
+            }
+  
+
+                
             if ((time - previousDepletionTime > depletionTime))
             {
                 previousDepletionTime = time;
-                Power--;
+                Power -= Difficulty/5;
             }
             for (int i = 0; i < MoveSet.Count; i++)
             {
